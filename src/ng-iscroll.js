@@ -64,10 +64,26 @@ angular.module('ng-iscroll', []).directive('ngIscroll', function ()
                 for (var i in scope.myScrollOptions) {
                     if (i === scroll_key) {
                         for (var k in scope.myScrollOptions[i]) {
-                            ngiScroll_opts[k] = scope.myScrollOptions[i][k];
+							// try to redefine onBeforeScrollStart
+							if (ngiScroll_opts.onBeforeScrollStart && k==="onBeforeScrollStart"){
+								ngiScroll_opts[k]=function(e){
+									ngiScroll_opts.onBeforeScrollStart(e); // respect ng-iscroll-form
+									scope.myScrollOptions[i][k].call(ngiScroll_opts,e);
+								};
+							}else{
+                            	ngiScroll_opts[k] = scope.myScrollOptions[i][k];
+							}
                         }
                     } else {
-                        ngiScroll_opts[i] = scope.myScrollOptions[i];
+						// try to redefine onBeforeScrollStart
+						if (ngiScroll_opts.onBeforeScrollStart && i==="onBeforeScrollStart"){
+							ngiScroll_opts[i]=function(e){
+								ngiScroll_opts.onBeforeScrollStart(e);
+								scope.myScrollOptions[i].call(ngiScroll_opts,e);
+							};
+						} else {
+                        	ngiScroll_opts[i] = scope.myScrollOptions[i];
+						}
                     }
                 }
             }
