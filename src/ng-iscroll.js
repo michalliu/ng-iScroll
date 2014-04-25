@@ -60,14 +60,14 @@ angular.module('ng-iscroll', []).directive('ngIscroll', function ()
                 };
             }
 
-            if (scope.$parent.myScrollOptions) {
-                for (var i in scope.$parent.myScrollOptions) {
+            if (scope.myScrollOptions) {
+                for (var i in scope.myScrollOptions) {
                     if (i === scroll_key) {
-                        for (var k in scope.$parent.myScrollOptions[i]) {
-                            ngiScroll_opts[k] = scope.$parent.myScrollOptions[i][k];
+                        for (var k in scope.myScrollOptions[i]) {
+                            ngiScroll_opts[k] = scope.myScrollOptions[i][k];
                         }
                     } else {
-                        ngiScroll_opts[i] = scope.$root.myScrollOptions[i];
+                        ngiScroll_opts[i] = scope.myScrollOptions[i];
                     }
                 }
             }
@@ -75,11 +75,11 @@ angular.module('ng-iscroll', []).directive('ngIscroll', function ()
             // iScroll initialize function
             function setScroll()
             {
-                if (scope.$parent.myScroll === undefined) {
-                    scope.$parent.myScroll = [];
+                if (scope.myScroll === undefined) {
+                    scope.myScroll = [];
                 }
 
-                scope.$parent.myScroll[scroll_key] = new iScroll(element[0], ngiScroll_opts);
+                scope.myScroll[scroll_key] = new iScroll(element[0], ngiScroll_opts);
             }
 
             // new specific setting for setting timeout using: ng-iscroll-timeout='{val}'
@@ -97,7 +97,7 @@ angular.module('ng-iscroll', []).directive('ngIscroll', function ()
 			if(attr.ngIscrollRefresher !== undefined) {
 				scope.$watch(attr.ngIscrollRefresher, function ()
 				{
-					if(scope.$parent.myScroll[scroll_key] !== undefined) scope.$parent.myScroll[scroll_key].refresh();
+					if(scope.myScroll[scroll_key] !== undefined) scope.myScroll[scroll_key].refresh();
 				});
 			}
         }
