@@ -78,7 +78,7 @@ HTML:
 
 AppController:
 ```
-$scope.$parent.myScrollOptions = {
+$scope.myScrollOptions = {
 	'wrapper': {
 		snap: false,
 		onScrollEnd: function ()
@@ -89,7 +89,7 @@ $scope.$parent.myScrollOptions = {
 
 $scope.refreshiScroll = function ()
 {
-	$scope.$parent.myScroll['wrapper'].refresh();
+	$scope.myScroll['wrapper'].refresh();
 	alert('wrapper refreshed');
 };
 ```
