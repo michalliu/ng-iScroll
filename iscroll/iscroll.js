@@ -109,8 +109,8 @@ var m = Math,
 			hScrollbar: true,
 			vScrollbar: true,
 			fixedScrollbar: isAndroid,
-			hideScrollbar: isIDevice,
-			fadeScrollbar: isIDevice && has3d,
+			hideScrollbar: true || isIDevice,
+			fadeScrollbar: true || (isIDevice && has3d),
 			scrollbarClass: '',
 
 			// Zoom
@@ -126,7 +126,9 @@ var m = Math,
 
 			// Events
 			onRefresh: null,
-			onBeforeScrollStart: function (e) { e.preventDefault(); },
+			onBeforeScrollStart: function (e) {
+				if (!hasTouch) e.preventDefault();
+			},
 			onScrollStart: null,
 			onBeforeScrollMove: null,
 			onScrollMove: null,
@@ -222,6 +224,12 @@ iScroll.prototype = {
 		this.refresh();
 	},
 	
+	_clickInterceptor: function (e) {
+		// Click event handler that is attached on the scrolled element
+		// to prevent clicks during scrolling.
+		e.preventDefault();
+	},
+
 	_scrollbar: function (dir) {
 		var that = this,
 			bar;
@@ -241,8 +249,13 @@ iScroll.prototype = {
 			// Create the scrollbar wrapper
 			bar = doc.createElement('div');
 
-			if (that.options.scrollbarClass) bar.className = that.options.scrollbarClass + dir.toUpperCase();
-			else bar.style.cssText = 'position:absolute;z-index:100;' + (dir == 'h' ? 'height:7px;bottom:1px;left:2px;right:' + (that.vScrollbar ? '7' : '2') + 'px' : 'width:7px;bottom:' + (that.hScrollbar ? '7' : '2') + 'px;top:2px;right:1px');
+			if (that.options.scrollbarClass) {
+				bar.className = that.options.scrollbarClass + dir.toUpperCase();
+			}
+			else {
+				bar.style.cssText = 'position:absolute;z-index:100;' + (dir == 'h' ? 'height:7px;bottom:1px;left:2px;right:' + (that.vScrollbar ? '7' : '2') + 'px' : 'width:7px;bottom:' + (that.hScrollbar ? '7' : '2') + 'px;top:2px;right:1px');
+				bar.className="iscrollbar";
+			}
 
 			bar.style.cssText += ';pointer-events:none;' + cssVendor + 'transition-property:opacity;' + cssVendor + 'transition-duration:' + (that.options.fadeScrollbar ? '350ms' : '0') + ';overflow:hidden;opacity:' + (that.options.hideScrollbar ? '0' : '1');
 
@@ -346,7 +359,7 @@ iScroll.prototype = {
 
 		if (!that.enabled) return;
 
-		if (that.options.onBeforeScrollStart) that.options.onBeforeScrollStart.call(that, e);
+		if (that.options.onBeforeScrollStart) that.options.onBeforeScrollStart.call(that, e, hasTouch);
 
 		if (that.options.useTransition || that.options.zoom) that._transitionTime(0);
 
@@ -421,8 +434,13 @@ iScroll.prototype = {
 
 		if (that.options.onBeforeScrollMove) that.options.onBeforeScrollMove.call(that, e);
 
+		// Disable clicks during scrolling. We use "capture" mode for the
+		// listener to make sure it gets executed before any other handlers.
+		that.scroller.addEventListener('click', that._clickInterceptor, true);
+
 		// Zoom
 		if (that.options.zoom && hasTouch && e.touches.length > 1) {
+			e.preventDefault();
 			c1 = m.abs(e.touches[0].pageX - e.touches[1].pageX);
 			c2 = m.abs(e.touches[0].pageY - e.touches[1].pageY);
 			that.touchesDist = m.sqrt(c1*c1+c2*c2);
@@ -476,8 +494,16 @@ iScroll.prototype = {
 			}
 		}
 
+		var oldX = that.x;
+		var oldY = that.y;
+
 		that.moved = true;
 		that._pos(newX, newY);
+
+		if(hasTouch && (that.x !== oldX || that.y !== oldY)) {
+			e.preventDefault();
+		}
+
 		that.dirX = deltaX > 0 ? -1 : deltaX < 0 ? 1 : 0;
 		that.dirY = deltaY > 0 ? -1 : deltaY < 0 ? 1 : 0;
 
@@ -509,6 +535,11 @@ iScroll.prototype = {
 		that._unbind(MOVE_EV, window);
 		that._unbind(END_EV, window);
 		that._unbind(CANCEL_EV, window);
+
+		// Enable clicking again
+		setTimeout(function() {  // We need to delay it 1ms or a click might get triggered
+			that.scroller.removeEventListener('click', that._clickInterceptor, true);
+		}, 1);
 
 		if (that.options.onBeforeScrollEnd) that.options.onBeforeScrollEnd.call(that, e);
 
